@@ -47,6 +47,9 @@ def run():
             print("Waking up!")
             iterator += 1
 
+    # TODO:
+    # fetch api every `delay_fetch` seconds
+    # upload to mongo every `delay_upload` seconds
 
 if __name__ == "__main__":
     run()
