@@ -8,4 +8,4 @@ RUN pip install -r requirements.txt
 
 COPY ./ ./
 
-CMD python3 -u producer-openweather.py
+CMD python3 -u producer-weather.py

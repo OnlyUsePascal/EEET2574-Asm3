@@ -1,0 +1,15 @@
+services:
+  weather:
+    build: ./producer-weather
+    container_name: weather
+    env_file:
+      - .env
+    ports:
+      - "8080:8080" 
+    restart: always
+    networks:
+      - weather-network
+
+networks:
+  weather-network:
+    driver: bridge

@@ -1,4 +1,4 @@
 pymongo
-pandas
 python-dotenv
 dataprep
+asyncio
