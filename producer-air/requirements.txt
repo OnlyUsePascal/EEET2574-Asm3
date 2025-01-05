@@ -1,4 +1,4 @@
 pymongo
 python-dotenv
+dataprep
 asyncio
-requests

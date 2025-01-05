@@ -9,6 +9,16 @@ services:
     restart: always
     networks:
       - weather-network
+  #air:
+    #build: ./producer-air
+    #container_name: air
+    #env_file:
+    #  - .env
+    #ports:
+    #  - "8081:8081" 
+    #restart: always
+    #networks:
+    #  - weather-network
 
 networks:
   weather-network:
