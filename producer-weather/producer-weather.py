@@ -55,9 +55,9 @@ async def run(weather_collection):
     """Main function to fetch and store weather data in a loop."""
     locations = [
         {"name": "Ho Chi Minh", "lat": 10.762622, "lon": 106.660172},
-        {"name": "Melbourne", "lat": -37.840935, "lon": 144.946457}
+        {"name": "Da Nang", "lat": 16.047079, "lon": 108.206230},
+        {"name": "Ha Noi", "lat": 21.028511, "lon": 105.804817},
     ]
-    iterator = 0
     cooldown = 1  
 
     while True:
