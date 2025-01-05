@@ -2,3 +2,4 @@ pymongo
 python-dotenv
 dataprep
 asyncio
+aiohttp
