@@ -6,14 +6,9 @@ services:
     env_file:
       - .env
       
-  # jupyter-notebook:
-  #   container_name: jupyter-notebook
-  #   image: jupyter-notebook
-  #   build: jupyter-notebook
-  #   ports:
-  #     - 8888:8888
-  #     - 5000:5000
-  #     - 8080:8080
-  #   env_file:
-  #     - .env
-  
+  producer-weather:
+    container_name: producer-weather
+    image: producer-weather
+    build: producer-weather
+    env_file:
+      - .env

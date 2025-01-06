@@ -1,55 +1,79 @@
-"""Produce openweathermap content to 'weather' kafka topic."""
 import asyncio
-import configparser
 import os
 import time
-from collections import namedtuple
-
+import json  
+from pymongo import MongoClient
+import requests
 from dotenv import load_dotenv
-from websocket import send
-from dataprep.connector import connect
 
+# Load environment variables
 load_dotenv()
 
+# MongoDB URI from environment variable
+uri = os.getenv("MONGO_URI")
+
+# Function to connect to MongoDB
+def connect_to_db():
+    client = MongoClient(uri)
+    print("Connected to MongoDB")
+    db = client['ASM3'] 
+    weather_collection = db['weather_data'] 
+    return weather_collection
+
+# OpenWeather API key
 access_token = os.getenv('OPENWEATHER_ACCESS_TOKEN')
 
-sc = connect('openweathermap',
-             _auth={'access_token': access_token},
-             _concurrency=3)
+# Connect to the OpenWeather API
+base_url = "https://api.openweathermap.org/data/2.5/weather"
 
-async def get_weather(city):
-    # Get the current weather details for the given city.
-    df_weather = await sc.query("weather", q=city)
-    return df_weather
+async def get_weather(lat, lon):
+    """Fetch the current weather data from the OpenWeather API."""
+    response = requests.get(base_url, params={
+        "lat": lat,
+        "lon": lon,
+        "appid": access_token
+    })
 
-def run():
-    locations = ["Ho Chi Minh", "Melbourne"]
-    iterator = 0
-    cooldown = 10
+    # Check if the request was successful
+    if response.status_code == 200:
+        weather_data = response.json()
+        return weather_data
+    else:
+        print(f"Error: {response.status_code} - {response.text}")
+        return None
+
+def insert_to_mongo(weather_collection, weather_data):
+    """Insert weather data into MongoDB."""
+    try:
+        # Insert weather data into the MongoDB collection
+        weather_collection.insert_one(weather_data)
+        print("Data inserted successfully.")
+    except Exception as e:
+        print(f"Error inserting data into MongoDB: {e}")
+
+async def run(weather_collection):
+    """Main function to fetch and store weather data in a loop."""
+    locations = [
+        {"name": "Ho Chi Minh", "lat": 10.762622, "lon": 106.660172},
+        {"name": "Da Nang", "lat": 16.047079, "lon": 108.206230},
+        {"name": "Ha Noi", "lat": 21.028511, "lon": 105.804817},
+    ]
+    cooldown = 1  
 
     while True:
-        try:
-            location = locations[(iterator + 1) % len(locations)]
-            current_weather = asyncio.run(get_weather(city=location))
-            current_weather['location'] = location
-            now = time.localtime()
-            current_weather['report_time'] = time.strftime("%Y-%m-%d %H:%M:%S", now)
-            current_weather = current_weather.to_json(orient="records")
-            sendit = current_weather[1:-1]
-            print(sendit)
+        for location in locations:
+            weather_data = await get_weather(location["lat"], location["lon"])
+            if weather_data:
+                # Add additional data like the location name and timestamp
+                weather_data["report_time"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+                print(weather_data)
 
-        except Exception as err:
-            print('Something went wrong !')
-            print(err)
+                # Insert the data into MongoDB
+                insert_to_mongo(weather_collection, weather_data)
 
-        finally:
-            time.sleep(cooldown)
-            print("Waking up!")
-            iterator += 1
-
-    # TODO:
-    # fetch api every `delay_fetch` seconds
-    # upload to mongo every `delay_upload` seconds
+            # Sleep between location requests
+            await asyncio.sleep(cooldown)
 
 if __name__ == "__main__":
-    run()
+    weather_collection = connect_to_db()
+    asyncio.run(run(weather_collection))

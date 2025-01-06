@@ -3,25 +3,22 @@ import asyncio
 import configparser
 import os
 import time
-from collections import namedtuple
 import datetime
 from pymongo import MongoClient, UpdateOne
-
 from dotenv import load_dotenv
 import requests
-from websocket import send
-from dataprep.connector import connect
 
 load_dotenv()
 TOMTOM_KEY = os.getenv('TOMTOM_KEY')
 CLUSTER_URL = os.getenv('CLUSTER_URL')
 
 # print(TOMTOM_KEY, CLUSTER_URL)
+# exit()
 # TOMTOM_KEY = 'mXoFdnZNt6QKMjsivV5TxQKG5BezGf9M'
 # CLUSTER_URL = 'mongodb+srv://user1:123@cluster0.1xjq9.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0'
 
-RAW_DB = 'asm3-test1'
-RAW_COLL = 'traffic-raw'
+RAW_DB = 'ASM3'
+RAW_COLL = 'traffic_raw'
 
 dbClient = MongoClient(CLUSTER_URL)
 collClient = dbClient\
@@ -72,7 +69,7 @@ def run():
     delay_fetch = 60 / len(cities)
     delay_upload = 60 * 15
     # delay_fetch = 5 
-    # delay_upload = 10
+    # delay_upload = 20
     iterator = 0
     last_fetch = datetime.datetime.now()
 
