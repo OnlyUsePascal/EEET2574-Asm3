@@ -1,0 +1,19 @@
+services:
+  producer-traffic:
+    container_name: producer-traffic
+    image: producer-traffic
+    build: producer-traffic
+    env_file:
+      - .env
+      
+  # jupyter-notebook:
+  #   container_name: jupyter-notebook
+  #   image: jupyter-notebook
+  #   build: jupyter-notebook
+  #   ports:
+  #     - 8888:8888
+  #     - 5000:5000
+  #     - 8080:8080
+  #   env_file:
+  #     - .env
+  
