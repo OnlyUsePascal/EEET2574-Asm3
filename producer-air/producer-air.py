@@ -3,7 +3,8 @@ import os
 import time
 import json  
 from pymongo import MongoClient
-from dataprep.connector import connect
+import requests
+import aiohttp
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -20,55 +21,60 @@ def connect_to_db():
     air_collection = db['air_data'] 
     return air_collection
 
-# OpenWeather API key
-access_token = os.getenv('OPENWEATHER_ACCESS_TOKEN')
+# Real-time Air Quality key
+access_token = os.getenv('AQICN_ACCESS_TOKEN')
 
-# Connect to the OpenWeather API
-sc = connect('openweathermap', _auth={'access_token': access_token}, _concurrency=3)
+# Connect to the Real-time Air Quality data feed
+base_url = "https://api.waqi.info/feed/"
 
 async def get_air(city):
-    """Fetch the current weather data from the OpenWeather API."""
-    df_weather = await sc.query("weather", q=city)
-    return df_weather
+    """Fetch the current air data from Real-time Air Quality data feed."""
+    async with aiohttp.ClientSession() as session:
+        url = f"{base_url}{city}/?token={access_token}"
+        async with session.get(url) as response:
+            if response.status == 200:
+                air_data = await response.json()
+                return air_data
+            else:
+                print(f"Error: {response.status} - {response.text()}")
+                return None
 
-def insert_to_mongo(air_collection, weather_data):
-    """Insert weather data into MongoDB."""
+def insert_to_mongo(air_collection, air_data):
+    """Insert air data into MongoDB."""
     try:
-        # Insert weather data into the MongoDB collection
-        air_collection.insert_one(weather_data)
+        # Insert air data into the MongoDB collection
+        air_collection.insert_one(air_data)
         print("Data inserted successfully.")
     except Exception as e:
         print(f"Error inserting data into MongoDB: {e}")
 
-def run(air_collection):
-    """Main function to fetch and store weather data in a loop."""
-    locations = ["Ho Chi Minh", "Melbourne"]
+async def run(air_collection):
+    """Main function to fetch and store air data in a loop."""
+    cities = ["ho-chi-minh-city", "danang", "hanoi"]
+    cities = [
+        {"location": "Ho Chi Minh City", "url_city": "ho-chi-minh-city"},
+        {"location": "Da Nang", "url_city": "danang"},
+        {"location": "Ha Noi", "url_city": "hanoi"},
+    ]
     iterator = 0
     cooldown = 1  
 
     while True:
-        try:
-            # Fetch weather data
-            location = locations[(iterator + 1) % len(locations)]
-            current_weather = asyncio.run(get_weather(city=location))
-            current_weather['location'] = location
-            now = time.localtime()
-            current_weather['report_time'] = time.strftime("%Y-%m-%d %H:%M:%S", now)
-            current_weather = json.loads(current_weather.to_json(orient="records"))
-            sendit = current_weather[0]  
+        for city in cities:
+            response = await get_air(city["url_city"])
+            if response:
+                # Add additional data like the location name and timestamp
+                air_data = response["data"]
+                air_data["report_time"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+                air_data["city"]["location"]=city["location"]
+                print(air_data)
 
-            # Store the fetched data
-            insert_to_mongo(air_collection, sendit)
+                # Insert the data into MongoDB
+                insert_to_mongo(air_collection, air_data)
 
-        except Exception as err:
-            print(f"Something went wrong while fetching data for {location}!")
-            print(err)
-
-        finally:
-            print(f"Finished processing {location}. Sleeping for {cooldown} seconds.")
-            time.sleep(cooldown)
-            iterator += 1
+            # Sleep between location requests
+            await asyncio.sleep(cooldown)
 
 if __name__ == "__main__":
     air_collection = connect_to_db()
-    run(air_collection)
+    asyncio.run(run(air_collection))

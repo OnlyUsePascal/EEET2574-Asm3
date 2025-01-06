@@ -5,6 +5,7 @@ services:
     build: producer-traffic
     env_file:
       - .env
+    restart: always
       
   producer-weather:
     container_name: producer-weather
@@ -12,3 +13,12 @@ services:
     build: producer-weather
     env_file:
       - .env
+    restart: always
+
+  producer-air:
+    container_name: producer-air
+    image: producer-air
+    build: producer-air
+    env_file:
+      - .env
+    restart: always
