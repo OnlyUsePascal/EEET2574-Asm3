@@ -18,7 +18,7 @@ def connect_to_db():
     client = MongoClient(uri)
     print("Connected to MongoDB")
     db = client['ASM3'] 
-    air_collection = db['air_data'] 
+    air_collection = db['air_raw'] 
     return air_collection
 
 # Real-time Air Quality key

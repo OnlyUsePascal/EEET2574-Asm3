@@ -17,7 +17,7 @@ def connect_to_db():
     client = MongoClient(uri)
     print("Connected to MongoDB")
     db = client['ASM3'] 
-    weather_collection = db['weather_data'] 
+    weather_collection = db['weather_raw'] 
     return weather_collection
 
 # OpenWeather API key
