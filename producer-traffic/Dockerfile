@@ -1,4 +1,4 @@
-FROM python:3.8
+FROM python:3.10.16
 
 WORKDIR /usr/app
 
@@ -8,4 +8,4 @@ RUN pip install -r requirements.txt
 
 COPY ./ ./
 
-CMD python3 -u producer-weather.py
+CMD python3 -u producer-traffic.py
