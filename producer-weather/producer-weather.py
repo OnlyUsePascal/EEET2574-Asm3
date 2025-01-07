@@ -58,7 +58,7 @@ async def run(weather_collection):
         {"name": "Da Nang", "lat": 16.047079, "lon": 108.206230},
         {"name": "Ha Noi", "lat": 21.028511, "lon": 105.804817},
     ]
-    cooldown = 1  
+    cooldown = 15  
 
     while True:
         for location in locations:
