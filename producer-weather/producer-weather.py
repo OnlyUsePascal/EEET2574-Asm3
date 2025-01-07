@@ -39,7 +39,7 @@ async def get_weather(lat, lon):
         weather_data = response.json()
         return weather_data
     else:
-        print(f"Error: {response.status_code} - {response.text}")
+        print(f"Error: {response.status_code} - {await response.text}")
         return None
 
 def insert_to_mongo(weather_collection, weather_data):

@@ -1,4 +1,3 @@
-"""Produce openweathermap content to 'weather' kafka topic."""
 import asyncio
 import configparser
 import os
@@ -26,20 +25,24 @@ collClient = dbClient\
     .get_collection(RAW_COLL)
 # TRAFFIC_COLLECTION = RAW_DB.traffic
 
-def fetch_incidents(city_bbox):
+def fetch_incidents(city_bbox, city_name):
     minLon, minLat, maxLon, maxLat = city_bbox
     url = (f"https://api.tomtom.com/traffic/services/5/incidentDetails"
-           + f"?key={TOMTOM_KEY}"
-           + "&fields={incidents{type,geometry{type,coordinates},properties{id,iconCategory,magnitudeOfDelay,events{description,code,iconCategory},startTime,endTime,from,to,length,delay,roadNumbers,timeValidity,probabilityOfOccurrence,numberOfReports,lastReportTime,tmc{countryCode,tableNumber,tableVersion,direction,points{location,offset}}}}}"
-           + "&language=en-GB"
-           + f"&bbox={minLon},{minLat},{maxLon},{maxLat}"
-           + "&categoryFilter=1,2,4,6,8,9,10,11"
-           # + "&fields={incidents{type,geometry{type,coordinates},properties{id,iconCategory,magnitudeOfDelay,events{description,code,iconCategory},startTime,endTime,from,to,length,delay,roadNumbers,timeValidity,probabilityOfOccurrence,numberOfReports,lastReportTime}}}"\
-           )
+            + f"?key={TOMTOM_KEY}"
+            + "&fields={incidents{type,geometry{type,coordinates},properties{id,iconCategory,magnitudeOfDelay,events{description,code,iconCategory},startTime,endTime,from,to,length,delay,roadNumbers,timeValidity,probabilityOfOccurrence,numberOfReports,lastReportTime,tmc{countryCode,tableNumber,tableVersion,direction,points{location,offset}}}}}"
+            + "&language=en-GB"
+            + f"&bbox={minLon},{minLat},{maxLon},{maxLat}"
+            + "&categoryFilter=1,2,4,6,8,9,10,11"
+            # + "&fields={incidents{type,geometry{type,coordinates},properties{id,iconCategory,magnitudeOfDelay,events{description,code,iconCategory},startTime,endTime,from,to,length,delay,roadNumbers,timeValidity,probabilityOfOccurrence,numberOfReports,lastReportTime}}}"\
+            )
 
     # print(url)
     res = requests.get(url)
-    return res.json()["incidents"]
+    data_json = res.json()["incidents"]
+    # add city name
+    for incident in data_json:
+        incident["properties"]["city"] = city_name
+    return data_json
 
 def upload_incidents(incidents_hist):
     update_requests = []
@@ -59,7 +62,7 @@ def upload_incidents(incidents_hist):
 def run():
     incidents_hist = []
     cities_bbox = {
-        "HCM City": [106.532129, 10.66594, 106.831575, 10.883411],
+        "Ho Chi Minh City": [106.532129, 10.66594, 106.831575, 10.883411],
         "Hanoi": [105.2849, 20.5645, 106.0201, 21.3853],
         "Da Nang": [107.818782, 15.917955, 108.574858, 16.344307],
         # "Hai Phong": [106.4005, 20.2208, 107.1187, 21.0203],
@@ -67,7 +70,7 @@ def run():
     }
     cities = list(cities_bbox.keys())
     delay_fetch = 60 / len(cities)
-    delay_upload = 60 * 15
+    delay_upload = 60 * 1
     # delay_fetch = 5 
     # delay_upload = 20
     iterator = 0
@@ -77,7 +80,7 @@ def run():
         try:
             city = cities[iterator]
             print(f'> Fetching incidents for {city}')
-            incidents_hist.append(fetch_incidents(cities_bbox[city]))
+            incidents_hist.append(fetch_incidents(cities_bbox[city], city))
 
             if (datetime.datetime.now() - last_fetch).seconds > delay_upload:
                 print('> Uploading to mongo...')
