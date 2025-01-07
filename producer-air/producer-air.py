@@ -57,7 +57,7 @@ async def run(air_collection):
         {"location": "Ha Noi", "url_city": "hanoi"},
     ]
     iterator = 0
-    cooldown = 1  
+    cooldown = 15
 
     while True:
         for city in cities:
