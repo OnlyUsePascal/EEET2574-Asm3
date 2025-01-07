@@ -22,3 +22,13 @@ services:
     env_file:
       - .env
     restart: always
+
+  etl-air:
+    container_name: etl-air
+    image: etl-air
+    build: etl-air
+    env_file:
+      - .env
+    restart: always
+
+  
