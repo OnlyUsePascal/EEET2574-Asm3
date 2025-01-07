@@ -22,3 +22,11 @@ services:
     env_file:
       - .env
     restart: always
+
+  etl-weather:
+    container_name: etl-weather
+    image: etl-weather
+    build: etl-weather
+    env_file:
+      - .env
+    restart: always
