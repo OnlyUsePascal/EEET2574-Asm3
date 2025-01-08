@@ -1,11 +1,11 @@
 services:
-  producer-traffic:
-    container_name: producer-traffic
-    image: producer-traffic
-    build: producer-traffic
-    env_file:
-      - .env
-    restart: always
+  #producer-traffic:
+    #container_name: producer-traffic
+    #image: producer-traffic
+    #build: producer-traffic
+    #env_file:
+      #- .env
+    #restart: always
       
   producer-weather:
     container_name: producer-weather
@@ -38,5 +38,12 @@ services:
     env_file:
       - .env
     restart: always
+    
+  etl-weather:
+    container_name: etl-weather
+    image: etl-weather
+    build: etl-weather
+    env_file:
+      - .env
+    restart: always
 
-  
