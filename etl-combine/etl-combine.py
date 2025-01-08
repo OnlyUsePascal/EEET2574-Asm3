@@ -60,8 +60,8 @@ def change_city_name(df: pd.DataFrame):
     return df 
 
 def split_time_to_hour_minute(df: pd.DataFrame):
-    df["hour"] = df["time"].str.split(":").str[0]
-    df["minute"] = df["time"].str.split(":").str[1]
+    df["hour"] = df["time"].str.split(":").str[0].astype(int)
+    df["minute"] = df["time"].str.split(":").str[1].astype(int)
     df.drop(columns=["time"], inplace=True)
     return df
 
