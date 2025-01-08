@@ -23,6 +23,22 @@ services:
       - .env
     restart: always
 
+  etl-traffic:
+    container_name: etl-traffic
+    image: etl-traffic
+    build: etl-traffic
+    env_file:
+      - .env
+    restart: always
+
+  etl-air:
+    container_name: etl-air
+    image: etl-air
+    build: etl-air
+    env_file:
+      - .env
+    restart: always
+    
   etl-weather:
     container_name: etl-weather
     image: etl-weather
@@ -30,3 +46,4 @@ services:
     env_file:
       - .env
     restart: always
+
