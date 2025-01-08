@@ -133,7 +133,7 @@ def run():
     if data_traffic_raw is not None:
       data_traffic_cleaned = transform_data(data_traffic_raw)
 
-      upsert_db('traffic_cleaned', data_traffic_cleaned.to_dict('records'))
+      upsert_db('traffic_clean', data_traffic_cleaned.to_dict('records'))
 
 
     # Sleep for 1 hours
