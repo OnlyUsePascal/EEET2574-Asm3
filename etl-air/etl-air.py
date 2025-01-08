@@ -122,7 +122,7 @@ def run():
             data_air_cleaned = transform_data(data_air_raw)
             
             # Upsert data to the cleaned collection
-            upsert_db('air_cleaned', data_air_cleaned.to_dict(orient='records'))
+            upsert_db('air_clean', data_air_cleaned.to_dict(orient='records'))
 
         # Sleep for 1 hours
         time.sleep(3600)
