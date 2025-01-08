@@ -94,11 +94,24 @@ def iso_to_local(iso_timestamp):
 
 def data_convert_time(df_input):
   df_output = df_input.copy()
-  df_output['reportTime'] = df_output['startTime'].apply(iso_to_local)
-  df_output['reportTime'] = pd.to_datetime(df_output['startTime']).dt.tz_localize(None)
+  df_output['report_time'] = df_output['startTime'].apply(iso_to_local)
+  df_output['report_time'] = pd.to_datetime(df_output['startTime']).dt.tz_localize(None)
   df_output.drop(columns=['startTime', 'endTime'], inplace=True, errors='ignore')
 
   return df_output
+
+def split_report_time(df, column_name='report_time'):
+    # Ensure the column is in datetime format
+    df[column_name] = pd.to_datetime(df[column_name])
+    
+    # Create new columns for date and time as strings
+    df['date'] = df[column_name].dt.date.astype(str)
+    df['time'] = df[column_name].dt.time.astype(str)
+    
+    # Optionally drop the original report_time column if no longer needed
+    df = df.drop(columns=[column_name])
+    
+    return df
 
 def clean_data(df_input: pd.DataFrame):
     df = df_input.copy()
@@ -119,6 +132,9 @@ def transform_data(df_input: pd.DataFrame):
     # Convert time to local time
     df_output = data_convert_time(df_output)
 
+    # Split report_time into date and time
+    df_output = split_report_time(df_output)
+
     # Clean the data
     df_output = clean_data(df_output)
 
@@ -126,18 +142,18 @@ def transform_data(df_input: pd.DataFrame):
 
 
 def run():
-  while True:
-    data_traffic_raw = fetch_db('traffic_raw')
+  # while True:
+  data_traffic_raw = fetch_db('traffic_raw')
 
-    # Transform data
-    if data_traffic_raw is not None:
-      data_traffic_cleaned = transform_data(data_traffic_raw)
+  # Transform data
+  if data_traffic_raw is not None:
+    data_traffic_cleaned = transform_data(data_traffic_raw)
 
-      upsert_db('traffic_clean', data_traffic_cleaned.to_dict('records'))
+    upsert_db('traffic_clean', data_traffic_cleaned.to_dict('records'))
 
 
-    # Sleep for 1 hours
-    time.sleep(3600)
+  # Sleep for 1 hours
+  # time.sleep(3600)
 
   
 
