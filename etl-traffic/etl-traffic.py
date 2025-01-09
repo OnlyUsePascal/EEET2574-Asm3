@@ -142,14 +142,14 @@ def transform_data(df_input: pd.DataFrame):
 
 
 def run():
-  # while True:
-  data_traffic_raw = fetch_db('traffic_raw')
+  while True:
+    data_traffic_raw = fetch_db('traffic_raw')
 
-  # Transform data
-  if data_traffic_raw is not None:
-    data_traffic_cleaned = transform_data(data_traffic_raw)
+    # Transform data
+    if data_traffic_raw is not None:
+      data_traffic_cleaned = transform_data(data_traffic_raw)
 
-    upsert_db('traffic_clean', data_traffic_cleaned.to_dict('records'))
+      upsert_db('traffic_clean', data_traffic_cleaned.to_dict('records'))
 
 
   # Sleep for 1 hours
