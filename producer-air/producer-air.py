@@ -14,8 +14,17 @@ load_dotenv()
 # MongoDB URI from environment variable
 uri = os.getenv("MONGO_URI")
 access_token = os.getenv('WEATHER_API_ACCESS_TOKEN')
-firehose = boto3.client('firehose', 'us-east-1')
+AWS_ACCESS_ID = os.getenv('aws_access_key_id')
+AWS_ACCESS_KEY = os.getenv('aws_secret_access_key')
+AWS_SESSSION_TOKEN = os.getenv('aws_session_token')
+
 firehose_stream = 'RAW-AIR-cpFmY'
+firehose = boto3.client(
+    service_name = 'firehose', 
+    region_name = 'us-east-1',
+    aws_access_key_id = AWS_ACCESS_ID,
+    aws_secret_access_key = AWS_ACCESS_KEY,
+    aws_session_token = AWS_SESSSION_TOKEN)
 
 # Function to connect to MongoDB
 def connect_to_db():
