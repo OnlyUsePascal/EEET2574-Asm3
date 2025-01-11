@@ -60,8 +60,8 @@ def change_city_name(df: pd.DataFrame):
     return df 
 
 def split_time_to_hour_minute(df: pd.DataFrame):
-    df["hour"] = df["time"].str.split(":").str[0]
-    df["minute"] = df["time"].str.split(":").str[1]
+    df["hour"] = df["time"].str.split(":").str[0].astype(int)
+    df["minute"] = df["time"].str.split(":").str[1].astype(int)
     df.drop(columns=["time"], inplace=True)
     return df
 
@@ -81,6 +81,38 @@ def merge_data(air_clean: pd.DataFrame, traffic_clean: pd.DataFrame, weather_cle
                                 .merge(traffic_clean, on=["date", "city", "hour", "minute"], how="inner")
 
     return df_output
+
+import pandas as pd
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+
+def classify_pollution(df, n_clusters=3, random_state=42):
+    # Select relevant features
+    features = ['humidity', 'pressure', 'temperature', 'wind_speed','magnitudeOfDelay', 'pm10', 'pm2_5', 'co', 'so2', 'o3']
+    X = df[features]
+
+    # Handle missing values
+    X = X.fillna(X.mean())
+
+    # Standardize the data
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+
+    # Apply K-Means clustering
+    kmeans = KMeans(n_clusters=n_clusters, random_state=random_state)
+    df['pollution_cluster'] = kmeans.fit_predict(X_scaled)
+
+    # Inverse transform centroids for interpretation
+    centroids = scaler.inverse_transform(kmeans.cluster_centers_)
+    centroid_df = pd.DataFrame(centroids, columns=features)
+
+    # Map cluster IDs to pollution levels (customize mapping as needed)
+    pollution_mapping = {0: 'High', 1: 'Moderate', 2: 'Low'}  # Adjust based on cluster analysis
+    df['pollution_level'] = df['pollution_cluster'].map(pollution_mapping)
+    
+    df.drop(columns=['pollution_cluster'], inplace=True)
+    return df
+
 
 def transform_data(air_clean: pd.DataFrame, traffic_clean: pd.DataFrame, weather_clean: pd.DataFrame):
     
@@ -102,10 +134,15 @@ def transform_data(air_clean: pd.DataFrame, traffic_clean: pd.DataFrame, weather
     # Drop columns id
     df_output = drop_columns_id(df_output)
     
+    # Classify pollution levels
+    df_output = classify_pollution(df_output)
+
     # Clean the data
     df_output = clean_data(df_output)
 
     return df_output
+
+
 
 def run():
     while True:
