@@ -49,7 +49,7 @@ def delete_db(collectionName = '', documents = []):
     collection = db[collectionName]
     collection.bulk_write(delReqs)
 
-def parse_json_column(df, json_columns):
+def parse_json_column(df, json_columns=["location", "current"]):
     """
     Parses specified JSON columns in a DataFrame and extracts required fields into new columns.
 
@@ -109,7 +109,7 @@ def transform_data(df_input: pd.DataFrame):
     df_output = split_report_time(df_output)
 
     # Clean the data
-    df_output = clean_data(df_output)
+    # df_output = clean_data(df_output)
 
     return df_output
 
