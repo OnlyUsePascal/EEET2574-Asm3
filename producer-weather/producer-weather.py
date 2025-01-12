@@ -4,27 +4,37 @@ import time
 import json  
 from pymongo import MongoClient
 import requests
+import aiohttp
+import boto3
 from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
 
-# MongoDB URI from environment variable
-uri = os.getenv("MONGO_URI")
+mongo_uri = os.getenv("MONGO_URI")
+access_token = os.getenv('OPENWEATHER_ACCESS_TOKEN')
+base_url = "https://api.openweathermap.org/data/2.5/weather"
+AWS_ACCESS_ID = os.getenv('aws_access_key_id')
+AWS_ACCESS_KEY = os.getenv('aws_secret_access_key')
+AWS_SESSSION_TOKEN = os.getenv('aws_session_token')
+
+firehose_stream = 'RAW-WEATHER-Scqie'
+firehose = boto3.client(
+    service_name = 'firehose', 
+    region_name = 'us-east-1',
+    aws_access_key_id = AWS_ACCESS_ID,
+    aws_secret_access_key = AWS_ACCESS_KEY,
+    aws_session_token = AWS_SESSSION_TOKEN)
+
 
 # Function to connect to MongoDB
 def connect_to_db():
-    client = MongoClient(uri)
+    client = MongoClient(mongo_uri)
     print("Connected to MongoDB")
     db = client['ASM3'] 
     weather_collection = db['weather_raw'] 
     return weather_collection
 
-# OpenWeather API key
-access_token = os.getenv('OPENWEATHER_ACCESS_TOKEN')
-
-# Connect to the OpenWeather API
-base_url = "https://api.openweathermap.org/data/2.5/weather"
 
 async def get_weather(lat, lon):
     """Fetch the current weather data from the OpenWeather API."""
@@ -42,14 +52,17 @@ async def get_weather(lat, lon):
         print(f"Error: {response.status_code} - {await response.text}")
         return None
 
-def insert_to_mongo(weather_collection, weather_data):
-    """Insert weather data into MongoDB."""
-    try:
-        # Insert weather data into the MongoDB collection
-        weather_collection.insert_one(weather_data)
-        print("Data inserted successfully.")
-    except Exception as e:
-        print(f"Error inserting data into MongoDB: {e}")
+
+def update_firehose(weather_data):
+    print('>', json.dumps(weather_data))
+    response = firehose.put_record(
+		DeliveryStreamName = firehose_stream,
+		Record={
+			'Data': json.dumps(weather_data)
+		}
+	)
+    print(response, '\n')
+
 
 async def run(weather_collection):
     """Main function to fetch and store weather data in a loop."""
@@ -66,13 +79,13 @@ async def run(weather_collection):
             if weather_data:
                 # Add additional data like the location name and timestamp
                 weather_data["report_time"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-                print(weather_data)
+                # print(weather_data)
 
                 # Insert the data into MongoDB
-                insert_to_mongo(weather_collection, weather_data)
+                update_firehose(weather_data)
 
             # Sleep between location requests
-            await asyncio.sleep(cooldown)
+        await asyncio.sleep(cooldown)
 
 if __name__ == "__main__":
     weather_collection = connect_to_db()

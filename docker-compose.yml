@@ -5,7 +5,7 @@ services:
     build: producer-traffic
     env_file:
       - .env
-    restart: always
+    # restart: always
       
   producer-weather:
     container_name: producer-weather
@@ -13,7 +13,7 @@ services:
     build: producer-weather
     env_file:
       - .env
-    restart: always
+    # restart: always
 
   producer-air:
     container_name: producer-air
@@ -21,39 +21,39 @@ services:
     build: producer-air
     env_file:
       - .env
-    restart: always
+    # restart: always
 
-  etl-traffic:
-    container_name: etl-traffic
-    image: etl-traffic
-    build: etl-traffic
-    env_file:
-      - .env
-    restart: always
+  # etl-traffic:
+  #   container_name: etl-traffic
+  #   image: etl-traffic
+  #   build: etl-traffic
+  #   env_file:
+  #     - .env
+  #   restart: always
 
-  etl-air:
-    container_name: etl-air
-    image: etl-air
-    build: etl-air
-    env_file:
-      - .env
-    restart: always
+  # etl-air:
+  #   container_name: etl-air
+  #   image: etl-air
+  #   build: etl-air
+  #   env_file:
+  #     - .env
+  #   restart: always
     
-  etl-weather:
-    container_name: etl-weather
-    image: etl-weather
-    build: etl-weather
-    env_file:
-      - .env
-    restart: always
+  # etl-weather:
+  #   container_name: etl-weather
+  #   image: etl-weather
+  #   build: etl-weather
+  #   env_file:
+  #     - .env
+  #   restart: always
 
-  etl-combine:
-    container_name: etl-combine
-    image: etl-combine
-    build: etl-combine
-    env_file:
-      - .env
-    restart: always
+  # etl-combine:
+  #   container_name: etl-combine
+  #   image: etl-combine
+  #   build: etl-combine
+  #   env_file:
+  #     - .env
+  #   restart: always
 
 
 

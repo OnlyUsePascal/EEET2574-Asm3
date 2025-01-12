@@ -1,20 +1,31 @@
 import asyncio
+import base64
 import configparser
+import json
 import os
 import time
 import datetime
+from urllib import response
 from pymongo import MongoClient, UpdateOne
 from dotenv import load_dotenv
+import boto3
 import requests
 
 load_dotenv()
 TOMTOM_KEY = os.getenv('TOMTOM_KEY')
 CLUSTER_URL = os.getenv('CLUSTER_URL')
+AWS_ACCESS_ID = os.getenv('aws_access_key_id')
+AWS_ACCESS_KEY = os.getenv('aws_secret_access_key')
+AWS_SESSSION_TOKEN = os.getenv('aws_session_token')
 
-# print(TOMTOM_KEY, CLUSTER_URL)
-# exit()
-# TOMTOM_KEY = 'mXoFdnZNt6QKMjsivV5TxQKG5BezGf9M'
-# CLUSTER_URL = 'mongodb+srv://user1:123@cluster0.1xjq9.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0'
+# firehose
+firehose_stream = 'RAW-TRAFFIC-Eo2oK'
+firehose = boto3.client(
+    service_name = 'firehose', 
+    region_name = 'us-east-1',
+    aws_access_key_id = AWS_ACCESS_ID,
+    aws_secret_access_key = AWS_ACCESS_KEY,
+    aws_session_token = AWS_SESSSION_TOKEN)
 
 RAW_DB = 'ASM3'
 RAW_COLL = 'traffic_raw'
@@ -43,21 +54,53 @@ def fetch_incidents(city_bbox, city_name):
     for incident in data_json:
         incident["properties"]["city"] = city_name
     return data_json
-
-def upload_incidents(incidents_hist):
-    update_requests = []
-    # print(incidents_hist)
     
-    # update incidents + upload new if not exists
-    for incidents in incidents_hist:
+
+# def upload_incidents(incidents_hist):
+#     update_requests = []
+#     # print(incidents_hist)
+    
+#     # update incidents + upload new if not exists
+#     for incidents in incidents_hist:
+#         for incident in incidents:
+#             incident["_id"] = incident["properties"]["id"]
+#             update_requests.append(
+#                 UpdateOne({"_id": incident["_id"]}, {"$set": incident}, upsert=True)
+#             )
+    
+#     # write to db
+#     collClient.bulk_write(update_requests)
+
+
+def update_firehose(traffic_data):
+    print('> Uploading to firehose...')
+    
+    # extract incidents
+    records = []
+    for incidents in traffic_data:
         for incident in incidents:
             incident["_id"] = incident["properties"]["id"]
-            update_requests.append(
-                UpdateOne({"_id": incident["_id"]}, {"$set": incident}, upsert=True)
-            )
-    
-    # write to db
-    collClient.bulk_write(update_requests)
+            records.append(incident)
+
+    # upload by batch
+    batch_sz = 100
+    while len(records) > 0:
+        records_batch = records[:batch_sz]
+        records = records[batch_sz:]
+        
+        records_formatted = [{
+            'Data' : json.dumps(record).encode()}
+            for record in records_batch
+        ]
+        print(records_formatted[0])
+
+        response = firehose.put_record_batch(
+            DeliveryStreamName = firehose_stream,
+            Records=records_formatted       
+        )
+        print(response, '\n')
+
+        time.sleep(5)
 
 def run():
     incidents_hist = []
@@ -70,7 +113,7 @@ def run():
     }
     cities = list(cities_bbox.keys())
     delay_fetch = 60 / len(cities)
-    delay_upload = 60 * 1
+    delay_upload = 60 * 5
     # delay_fetch = 5 
     # delay_upload = 20
     iterator = 0
@@ -83,14 +126,13 @@ def run():
             incidents_hist.append(fetch_incidents(cities_bbox[city], city))
 
             if (datetime.datetime.now() - last_fetch).seconds > delay_upload:
-                print('> Uploading to mongo...')
                 last_fetch = datetime.datetime.now()
-                upload_incidents(incidents_hist)
+                update_firehose(incidents_hist)
                 incidents_hist = []
 
-        except Exception as err:
-            print('> Something went wrong !')
-            print(err)
+        # except Exception as err:
+        #     print('> Something went wrong !')
+        #     print(err)
 
         finally:
             time.sleep(delay_fetch)
