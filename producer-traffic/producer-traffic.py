@@ -83,7 +83,7 @@ def update_firehose(traffic_data):
             records.append(incident)
 
     # upload by batch
-    batch_sz = 250
+    batch_sz = 100
     while len(records) > 0:
         records_batch = records[:batch_sz]
         records = records[batch_sz:]
@@ -93,12 +93,14 @@ def update_firehose(traffic_data):
             for record in records_batch
         ]
         print(records_formatted[0])
+
         response = firehose.put_record_batch(
             DeliveryStreamName = firehose_stream,
             Records=records_formatted       
         )
         print(response, '\n')
 
+        time.sleep(5)
 
 def run():
     incidents_hist = []
