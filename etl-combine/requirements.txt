@@ -1,9 +1,0 @@
-pymongo
-python-dotenv
-asyncio
-aiohttp
-requests
-geopy
-seaborn
-numpy
-scikit-learn
