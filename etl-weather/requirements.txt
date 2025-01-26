@@ -1,8 +1,0 @@
-pymongo
-python-dotenv
-asyncio
-aiohttp
-requests
-seaborn
-numpy
-time

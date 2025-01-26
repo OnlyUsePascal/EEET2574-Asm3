@@ -92,13 +92,10 @@ def update_firehose(traffic_data):
             'Data' : json.dumps(record).encode()}
             for record in records_batch
         ]
-        print(records_formatted[0])
-
         response = firehose.put_record_batch(
             DeliveryStreamName = firehose_stream,
             Records=records_formatted       
         )
-        print(response, '\n')
 
         time.sleep(5)
 
@@ -121,19 +118,24 @@ def run():
 
     while True:
         try:
+            # iterate city
             city = cities[iterator]
             print(f'> Fetching incidents for {city}')
-            incidents_hist.append(fetch_incidents(cities_bbox[city], city))
-
-            if (datetime.datetime.now() - last_fetch).seconds > delay_upload:
+            incidents_hist.append(
+                fetch_incidents(cities_bbox[city], city))
+            
+            # delay between upload
+            now_ = datetime.datetime.now()
+            if (now_ - last_fetch).seconds > delay_upload:
                 last_fetch = datetime.datetime.now()
                 update_firehose(incidents_hist)
                 incidents_hist = []
 
-        # except Exception as err:
-        #     print('> Something went wrong !')
-        #     print(err)
+        except Exception as err:
+            print('> Something went wrong !')
+            print(err)
 
+        # delay between fetch
         finally:
             time.sleep(delay_fetch)
             print("> Waking up!")
