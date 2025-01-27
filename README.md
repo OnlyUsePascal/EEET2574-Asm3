@@ -159,3 +159,7 @@ Additional Notes
 - Monitor SageMaker logs during each step to catch potential errors.
 - Verify S3 bucket permissions to ensure smooth upload and access to the model.
 - Keep track of the endpoint name for invoking predictions effectively.
+
+# Visualization
+
+MongoDB Chart: https://charts.mongodb.com/charts-eeet2574-asm3-wcltbpp/public/dashboards/677f772c-613a-4130-8384-e5993bf03ffa
